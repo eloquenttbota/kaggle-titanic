@@ -23,11 +23,6 @@ from sklearn.preprocessing import LabelEncoder
 
 
 def _impute_age(data_df, train_df, test_df):
-    """
-    Impute missing Age using Title group medians.
-    Title is only used for imputation — it is NOT kept as a feature.
-    This matches Konstantin's approach exactly.
-    """
     data_df['Title'] = data_df['Name'].str.extract('([A-Za-z]+)\.', expand=True)
 
     mapping = {
@@ -43,11 +38,9 @@ def _impute_age(data_df, train_df, test_df):
         mask = (data_df['Age'].isnull()) & (data_df['Title'] == title)
         data_df.loc[mask, 'Age'] = median_age
 
-    # Push imputed ages back to train/test
     train_df['Age'] = data_df['Age'][:len(train_df)].values
     test_df['Age']  = data_df['Age'][len(train_df):].values
 
-    # Drop Title — not used as a feature in this pipeline
     data_df.drop('Title', axis=1, inplace=True)
 
     return data_df, train_df, test_df
