@@ -52,7 +52,7 @@ def _family_survival(data_df, train_df, test_df):
     Pass 2: group by Ticket (travel companions)
     """
     data_df['Last_Name'] = data_df['Name'].apply(lambda x: str.split(x, ',')[0])
-    data_df['Fare'].fillna(data_df['Fare'].mean(), inplace=True)
+    data_df['Fare'] = data_df['Fare'].fillna(data_df['Fare'].mean())
 
     DEFAULT = 0.5
     data_df['Family_Survival'] = DEFAULT
