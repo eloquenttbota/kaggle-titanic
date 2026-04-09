@@ -48,10 +48,6 @@ def _impute_age(data_df, train_df, test_df):
 
 def _family_survival(data_df, train_df, test_df):
     """
-    Compute Family_Survival exactly as in Konstantin's kernel.
-
-    Values: 0 (group died), 0.5 (unknown/default), 1 (group survived)
-
     Pass 1: group by Last_Name + Fare (same family)
     Pass 2: group by Ticket (travel companions)
     """
@@ -94,40 +90,27 @@ def _family_survival(data_df, train_df, test_df):
     print(f"  Pass 2 — passengers with family/group info: "
           f"{data_df.loc[data_df['Family_Survival'] != DEFAULT].shape[0]}")
 
-    # Push back to train/test
     train_df['Family_Survival'] = data_df['Family_Survival'][:len(train_df)].values
     test_df['Family_Survival']  = data_df['Family_Survival'][len(train_df):].values
 
     return data_df, train_df, test_df
 
 
-def build_features(train_df: pd.DataFrame, test_df: pd.DataFrame):
-    """
-    Exact feature pipeline from Konstantin's 0.82-0.83 kernel.
+def build_features(train_df, test_df):
 
-    Final features (6 total):
-        Pclass, Sex, Family_Size, Family_Survival, FareBin_Code, AgeBin_Code
-
-    Returns: X_train, y_train, X_test
-    """
     train_df = train_df.copy()
     test_df  = test_df.copy()
 
-    # Combined dataset for consistent transformations
     data_df = pd.concat([train_df, test_df], ignore_index=True)
 
-    # --- Age imputation via Title (Title dropped after) ---
     data_df, train_df, test_df = _impute_age(data_df, train_df, test_df)
 
-    # --- Family Size: SibSp + Parch (no +1, matches kernel exactly) ---
     data_df['Family_Size'] = data_df['Parch'] + data_df['SibSp']
     train_df['Family_Size'] = data_df['Family_Size'][:len(train_df)].values
     test_df['Family_Size']  = data_df['Family_Size'][len(train_df):].values
 
-    # --- Family Survival ---
     data_df, train_df, test_df = _family_survival(data_df, train_df, test_df)
 
-    # --- Fare Bins (quantile, label encoded — ordinal feature) ---
     data_df['Fare'].fillna(data_df['Fare'].median(), inplace=True)
     data_df['FareBin'] = pd.qcut(data_df['Fare'], 5)
     label = LabelEncoder()
@@ -135,17 +118,14 @@ def build_features(train_df: pd.DataFrame, test_df: pd.DataFrame):
     train_df['FareBin_Code'] = data_df['FareBin_Code'][:len(train_df)].values
     test_df['FareBin_Code']  = data_df['FareBin_Code'][len(train_df):].values
 
-    # --- Age Bins (quantile, label encoded — ordinal feature) ---
     data_df['AgeBin'] = pd.qcut(data_df['Age'], 4)
     data_df['AgeBin_Code'] = label.fit_transform(data_df['AgeBin'])
     train_df['AgeBin_Code'] = data_df['AgeBin_Code'][:len(train_df)].values
     test_df['AgeBin_Code']  = data_df['AgeBin_Code'][len(train_df):].values
 
-    # --- Sex encoding: male=0, female=1 ---
     train_df['Sex'] = train_df['Sex'].map({'male': 0, 'female': 1})
     test_df['Sex']  = test_df['Sex'].map({'male': 0, 'female': 1})
 
-    # --- Final feature selection (exactly Konstantin's 6 features) ---
     FEATURES = ['Pclass', 'Sex', 'Family_Size', 'Family_Survival',
                 'FareBin_Code', 'AgeBin_Code']
 

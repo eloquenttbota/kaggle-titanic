@@ -1,16 +1,3 @@
-"""
-train.py
---------
-Trains the best model using Konstantin's 6-feature pipeline.
-
-Usage:
-    python scripts/train.py
-
-Output:
-    scripts/model.pkl
-    scripts/scaler.pkl
-"""
-
 import os, sys, pickle
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -38,7 +25,6 @@ def main():
     scaler   = StandardScaler()
     X_scaled = scaler.fit_transform(X_train)
 
-    # KNN with n=6 — Konstantin's best configuration (0.83253)
     model  = KNeighborsClassifier(algorithm='auto', leaf_size=26,
                                   n_neighbors=6, weights='uniform')
     kfold  = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)

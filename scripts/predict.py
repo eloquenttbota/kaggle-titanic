@@ -1,15 +1,3 @@
-"""
-predict.py
-----------
-Generates submission.csv using the trained model.
-
-Usage:
-    python scripts/predict.py
-
-Output:
-    data/submission.csv
-"""
-
 import os, sys, pickle
 import pandas as pd
 
